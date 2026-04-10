@@ -36,6 +36,7 @@ public sealed class Translator : IDisposable
         _tray.ExitRequested += () => Application.Current.Dispatcher.Invoke(Application.Current.Shutdown);
 
         ApplyConfig();
+        _ = _ai.PreWarm();
 
         if (string.IsNullOrWhiteSpace(_config.ApiKey) || string.IsNullOrWhiteSpace(_config.Hotkey))
             ShowSettings();
@@ -76,10 +77,22 @@ public sealed class Translator : IDisposable
             }
 
             var system = Languages.BuildPrompt(_config.TargetLanguage);
-            var result = await _ai.Translate(_config.ApiKey, _config.Model, system, text);
+            var ui = Application.Current.Dispatcher;
+            int started = 0;
 
-            if (result != null) _overlay.ShowResult(result);
-            else _overlay.ShowError(_ai.LastError ?? "Unknown error");
+            var ok = await _ai.StreamTranslate(
+                _config.ApiKey, _config.Model, system, text,
+                token =>
+                {
+                    bool first = Interlocked.Exchange(ref started, 1) == 0;
+                    ui.BeginInvoke(new Action(() =>
+                    {
+                        if (first) _overlay.StartResult();
+                        _overlay.AppendResult(token);
+                    }));
+                }).ConfigureAwait(true);
+
+            if (!ok) _overlay.ShowError(_ai.LastError ?? "Unknown error");
         }
         catch (Exception ex)
         {
