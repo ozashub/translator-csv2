@@ -1,0 +1,48 @@
+<Window x:Class="TranslatorCsV2.Overlay.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Focusable="False"
+        SizeToContent="WidthAndHeight"
+        UseLayoutRounding="True">
+    <Border x:Name="Root"
+            CornerRadius="10"
+            Padding="14,11"
+            BorderThickness="1"
+            MaxWidth="420"
+            MouseLeftButtonDown="OnClickDismiss">
+        <Border.Background>
+            <SolidColorBrush Color="#0E0F13"
+                             Opacity="0.92"/>
+        </Border.Background>
+        <Border.BorderBrush>
+            <SolidColorBrush Color="#FFFFFF"
+                             Opacity="0.10"/>
+        </Border.BorderBrush>
+        <Border.Effect>
+            <DropShadowEffect Color="Black"
+                              BlurRadius="22"
+                              ShadowDepth="0"
+                              Opacity="0.55"/>
+        </Border.Effect>
+        <StackPanel>
+            <TextBlock x:Name="Caption"
+                       Text="TRANSLATION"
+                       Foreground="#8A8F9C"
+                       FontSize="10"
+                       FontFamily="Segoe UI Semibold"
+                       Margin="0,0,0,4"/>
+            <TextBlock x:Name="Body"
+                       Foreground="#F2F3F5"
+                       FontSize="14"
+                       FontFamily="Segoe UI"
+                       TextWrapping="Wrap"
+                       LineHeight="20"/>
+        </StackPanel>
+    </Border>
+</Window>
