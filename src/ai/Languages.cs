@@ -12,23 +12,8 @@ public static class Languages
         "Thai", "Indonesian", "Hindi",
     };
 
-    public static readonly string[] Sources = Build();
-
-    private static string[] Build()
-    {
-        var list = new string[Targets.Length + 1];
-        list[0] = "Auto";
-        System.Array.Copy(Targets, 0, list, 1, Targets.Length);
-        return list;
-    }
-
-    public static string BuildPrompt(string source, string target)
-    {
-        var from = source == "Auto" ? "the source language" : source;
-        return
-            $"You are a translator. Translate the user's text from {from} into {target}.\n" +
-            "Output only the translation. No commentary, no quotes, no labels.\n" +
-            "Preserve tone, punctuation, and line breaks. If the text is already in " +
-            $"{target}, return it unchanged.";
-    }
+    public static string BuildPrompt(string target) =>
+        $"You are a translator. Detect the source language of the user's text and translate it into {target}.\n" +
+        "Output only the translation. No commentary, no quotes, no labels, no source language name.\n" +
+        $"Preserve tone, punctuation, and line breaks. If the text is already in {target}, return it unchanged.";
 }

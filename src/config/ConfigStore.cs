@@ -42,7 +42,6 @@ public static class ConfigStore
             ApiKey = Encrypt(cfg.ApiKey),
             Model = cfg.Model,
             Hotkey = cfg.Hotkey,
-            SourceLanguage = cfg.SourceLanguage,
             TargetLanguage = cfg.TargetLanguage,
         };
         System.IO.File.WriteAllText(File, JsonSerializer.Serialize(copy, Json));

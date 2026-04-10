@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Translator"
         Width="440"
-        Height="500"
+        Height="410"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="#0E0F13"
@@ -38,6 +38,10 @@
             <Setter Property="BorderBrush" Value="#2A2D36"/>
             <Setter Property="Padding" Value="10,6"/>
         </Style>
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#111111"/>
+            <Setter Property="Padding" Value="8,5"/>
+        </Style>
         <Style TargetType="Button">
             <Setter Property="Background" Value="#3B5BDB"/>
             <Setter Property="Foreground" Value="White"/>
@@ -50,8 +54,6 @@
 
     <Grid Margin="22,20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -78,13 +80,10 @@
                  Cursor="Hand"
                  Margin="0,0,0,16"/>
 
-        <TextBlock Grid.Row="5" Text="SOURCE LANGUAGE" Style="{StaticResource Label}"/>
-        <ComboBox Grid.Row="6" x:Name="SourceBox" Margin="0,0,0,16"/>
+        <TextBlock Grid.Row="5" Text="TARGET LANGUAGE" Style="{StaticResource Label}"/>
+        <ComboBox Grid.Row="6" x:Name="TargetBox" Margin="0,0,0,16"/>
 
-        <TextBlock Grid.Row="7" Text="TARGET LANGUAGE" Style="{StaticResource Label}"/>
-        <ComboBox Grid.Row="8" x:Name="TargetBox" Margin="0,0,0,16"/>
-
-        <StackPanel Grid.Row="10" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" Background="#2A2D36" Click="OnCancel" Margin="0,0,8,0"/>
             <Button Content="Save" Click="OnSave"/>
         </StackPanel>

@@ -5,6 +5,5 @@ public sealed class AppConfig
     public string ApiKey { get; set; } = "";
     public string Model { get; set; } = "gpt-4o-mini";
     public string Hotkey { get; set; } = "";
-    public string SourceLanguage { get; set; } = "Auto";
     public string TargetLanguage { get; set; } = "English";
 }

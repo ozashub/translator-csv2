@@ -27,12 +27,8 @@ public partial class SettingsWindow : Window
         ApiKeyBox.Password = config.ApiKey;
         HotkeyBox.Text = _combo.IsEmpty ? "click to set" : _combo.ToString();
 
-        SourceBox.ItemsSource = Languages.Sources;
         TargetBox.ItemsSource = Languages.Targets;
-        SourceBox.SelectedItem = config.SourceLanguage;
         TargetBox.SelectedItem = config.TargetLanguage;
-
-        if (SourceBox.SelectedIndex < 0) SourceBox.SelectedIndex = 0;
         if (TargetBox.SelectedIndex < 0) TargetBox.SelectedIndex = 0;
     }
 
@@ -63,7 +59,6 @@ public partial class SettingsWindow : Window
     {
         _config.ApiKey = ApiKeyBox.Password;
         _config.Hotkey = _combo.Serialize();
-        _config.SourceLanguage = (string)SourceBox.SelectedItem;
         _config.TargetLanguage = (string)TargetBox.SelectedItem;
         Saved = true;
         Close();

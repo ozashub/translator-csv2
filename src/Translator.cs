@@ -71,7 +71,7 @@ public sealed class Translator : IDisposable
 
             _overlay.ShowLoading();
 
-            var system = Languages.BuildPrompt(_config.SourceLanguage, _config.TargetLanguage);
+            var system = Languages.BuildPrompt(_config.TargetLanguage);
             var result = await _ai.Translate(_config.ApiKey, _config.Model, system, text);
 
             if (result != null) _overlay.ShowResult(result);
