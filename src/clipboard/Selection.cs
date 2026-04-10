@@ -9,23 +9,32 @@ public static class Selection
 {
     private const ushort VK_CONTROL = 0x11;
     private const ushort VK_C = 0x43;
+    private const ushort VK_V = 0x56;
     private const uint KEYEVENTF_KEYUP = 0x0002;
 
-    public static async Task<string?> CaptureAsync()
+    public static async Task<string?> CaptureAsync(bool restoreClipboard = true)
     {
-        var saved = TryReadClipboardText();
+        var saved = restoreClipboard ? TryReadClipboardText() : null;
         var seq = GetClipboardSequenceNumber();
 
         SendCtrlC();
 
         var text = await WaitForClipboardChange(seq, 400);
 
-        if (saved != null)
-            TryWriteClipboardText(saved);
-        else
-            TryClearClipboard();
+        if (restoreClipboard)
+        {
+            if (saved != null) TryWriteClipboardText(saved);
+            else TryClearClipboard();
+        }
 
         return text;
+    }
+
+    public static async Task ReplaceAsync(string result)
+    {
+        TryWriteClipboardText(result);
+        await Task.Delay(15);
+        SendCtrlV();
     }
 
     private static async Task<string?> WaitForClipboardChange(uint before, int timeoutMs)
@@ -40,13 +49,16 @@ public static class Selection
         return null;
     }
 
-    private static void SendCtrlC()
+    private static void SendCtrlC() => SendCombo(VK_C);
+    private static void SendCtrlV() => SendCombo(VK_V);
+
+    private static void SendCombo(ushort key)
     {
         var seq = new[]
         {
             MakeKey(VK_CONTROL, false),
-            MakeKey(VK_C, false),
-            MakeKey(VK_C, true),
+            MakeKey(key, false),
+            MakeKey(key, true),
             MakeKey(VK_CONTROL, true),
         };
 

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Translator"
         Width="460"
-        Height="440"
+        Height="540"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
@@ -312,6 +312,8 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -347,25 +349,37 @@
                     Margin="0,0,0,16"/>
 
             <TextBlock Grid.Row="3"
-                    Text="HOTKEY"
+                    Text="OVERLAY KEYBIND"
                     Style="{StaticResource Label}"/>
             <TextBox Grid.Row="4"
-                     x:Name="HotkeyBox"
+                     x:Name="OverlayHotkeyBox"
                      IsReadOnly="True"
                      Text="click to set"
-                     GotFocus="OnHotkeyFocus"
+                     GotFocus="OnOverlayHotkeyFocus"
                      LostFocus="OnHotkeyBlur"
                      Cursor="Hand"
                      Margin="0,0,0,16"/>
 
             <TextBlock Grid.Row="5"
+                    Text="TRANSLATOR KEYBIND"
+                    Style="{StaticResource Label}"/>
+            <TextBox Grid.Row="6"
+                     x:Name="TranslatorHotkeyBox"
+                     IsReadOnly="True"
+                     Text="click to set"
+                     GotFocus="OnTranslatorHotkeyFocus"
+                     LostFocus="OnHotkeyBlur"
+                     Cursor="Hand"
+                     Margin="0,0,0,16"/>
+
+            <TextBlock Grid.Row="7"
                     Text="TARGET LANGUAGE"
                     Style="{StaticResource Label}"/>
-            <ComboBox Grid.Row="6"
+            <ComboBox Grid.Row="8"
                     x:Name="TargetBox"
                     Margin="0,0,0,16"/>
 
-            <StackPanel Grid.Row="8"
+            <StackPanel Grid.Row="10"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
                 <Button Content="Cancel"

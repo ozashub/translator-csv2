@@ -16,6 +16,8 @@
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <DebugType>embedded</DebugType>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

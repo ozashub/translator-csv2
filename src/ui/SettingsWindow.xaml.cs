@@ -12,7 +12,8 @@ public partial class SettingsWindow : Window
 {
     private readonly GlobalHotkey _hotkey;
     private readonly AppConfig _config;
-    private KeyCombo _combo;
+    private KeyCombo _overlayCombo;
+    private KeyCombo _translatorCombo;
     private CancellationTokenSource? _captureCts;
 
     public bool Saved { get; private set; }
@@ -23,30 +24,40 @@ public partial class SettingsWindow : Window
 
         _config = config;
         _hotkey = hotkey;
-        _combo = KeyCombo.Parse(config.Hotkey);
+        _overlayCombo = KeyCombo.Parse(config.OverlayHotkey);
+        _translatorCombo = KeyCombo.Parse(config.TranslatorHotkey);
 
         ApiKeyBox.Password = config.ApiKey;
-        HotkeyBox.Text = _combo.IsEmpty ? "click to set" : _combo.ToString();
+        OverlayHotkeyBox.Text    = _overlayCombo.IsEmpty    ? "click to set" : _overlayCombo.ToString();
+        TranslatorHotkeyBox.Text = _translatorCombo.IsEmpty ? "click to set" : _translatorCombo.ToString();
 
         TargetBox.ItemsSource = Languages.Targets;
         TargetBox.SelectedItem = config.TargetLanguage;
         if (TargetBox.SelectedIndex < 0) TargetBox.SelectedIndex = 0;
     }
 
-    private async void OnHotkeyFocus(object sender, RoutedEventArgs e)
+    private async void OnOverlayHotkeyFocus(object sender, RoutedEventArgs e) =>
+        await Capture(OverlayHotkeyBox, c => _overlayCombo = c, () => _overlayCombo);
+
+    private async void OnTranslatorHotkeyFocus(object sender, RoutedEventArgs e) =>
+        await Capture(TranslatorHotkeyBox, c => _translatorCombo = c, () => _translatorCombo);
+
+    private async System.Threading.Tasks.Task Capture(
+        System.Windows.Controls.TextBox box, Action<KeyCombo> setter, Func<KeyCombo> getter)
     {
-        HotkeyBox.Text = "press any key…";
+        box.Text = "press any key…";
         _captureCts = new CancellationTokenSource();
 
         try
         {
             var c = await _hotkey.CaptureAsync(_captureCts.Token);
-            _combo = c;
-            HotkeyBox.Text = c.ToString();
+            setter(c);
+            box.Text = c.ToString();
         }
         catch (OperationCanceledException)
         {
-            HotkeyBox.Text = _combo.IsEmpty ? "click to set" : _combo.ToString();
+            var cur = getter();
+            box.Text = cur.IsEmpty ? "click to set" : cur.ToString();
         }
     }
 
@@ -59,7 +70,8 @@ public partial class SettingsWindow : Window
     private void OnSave(object sender, RoutedEventArgs e)
     {
         _config.ApiKey = ApiKeyBox.Password;
-        _config.Hotkey = _combo.Serialize();
+        _config.OverlayHotkey    = _overlayCombo.Serialize();
+        _config.TranslatorHotkey = _translatorCombo.Serialize();
         _config.TargetLanguage = (string)TargetBox.SelectedItem;
         Saved = true;
         Close();

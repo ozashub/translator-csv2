@@ -16,7 +16,7 @@ public sealed class OpenAiClient : IDisposable
 
     public string? LastError { get; private set; }
 
-    public async Task<string?> Translate(string apiKey, string model, string system, string user, CancellationToken ct = default)
+    public async Task<string?> Chat(string apiKey, string model, string system, string user, double temperature = 0.2, CancellationToken ct = default)
     {
         LastError = null;
 
@@ -29,10 +29,11 @@ public sealed class OpenAiClient : IDisposable
         var payload = new
         {
             model,
-            temperature = 0.2,
+            temperature,
             messages = new object[]
             {
                 new { role = "system", content = system },
+                new { role = "system", content = Prompts.RefusalFallback },
                 new { role = "user",   content = user   },
             },
         };

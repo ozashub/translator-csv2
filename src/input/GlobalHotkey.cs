@@ -21,10 +21,12 @@ public sealed class GlobalHotkey : IDisposable
     private Thread? _thread;
     private uint _threadId;
 
-    private KeyCombo _combo;
+    private KeyCombo _overlayCombo;
+    private KeyCombo _translatorCombo;
     private TaskCompletionSource<KeyCombo>? _capture;
 
-    public event Action? Pressed;
+    public event Action? OverlayPressed;
+    public event Action? TranslatorPressed;
 
     public GlobalHotkey()
     {
@@ -53,7 +55,8 @@ public sealed class GlobalHotkey : IDisposable
         ready.Wait();
     }
 
-    public void SetCombo(KeyCombo c) => _combo = c;
+    public void SetOverlayCombo(KeyCombo c) => _overlayCombo = c;
+    public void SetTranslatorCombo(KeyCombo c) => _translatorCombo = c;
 
     public Task<KeyCombo> CaptureAsync(CancellationToken ct = default)
     {
@@ -93,19 +96,23 @@ public sealed class GlobalHotkey : IDisposable
             return (IntPtr)1;
         }
 
-        if (!_combo.IsEmpty &&
-            ctrl == _combo.Ctrl &&
-            shift == _combo.Shift &&
-            alt == _combo.Alt &&
-            win == _combo.Win &&
-            scan == _combo.ScanCode)
+        if (Matches(_overlayCombo, ctrl, shift, alt, win, scan))
         {
-            ThreadPool.QueueUserWorkItem(_ => Pressed?.Invoke());
+            ThreadPool.QueueUserWorkItem(_ => OverlayPressed?.Invoke());
+            return (IntPtr)1;
+        }
+
+        if (Matches(_translatorCombo, ctrl, shift, alt, win, scan))
+        {
+            ThreadPool.QueueUserWorkItem(_ => TranslatorPressed?.Invoke());
             return (IntPtr)1;
         }
 
         return CallNextHookEx(_hook, code, wParam, lParam);
     }
+
+    private static bool Matches(KeyCombo c, bool ctrl, bool shift, bool alt, bool win, uint scan) =>
+        !c.IsEmpty && ctrl == c.Ctrl && shift == c.Shift && alt == c.Alt && win == c.Win && scan == c.ScanCode;
 
     private static bool IsModifier(uint vk) =>
         vk is >= 0xA0 and <= 0xA5 or 0x5B or 0x5C or 0x10 or 0x11 or 0x12;
