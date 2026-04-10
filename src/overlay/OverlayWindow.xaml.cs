@@ -30,6 +30,7 @@ public partial class OverlayWindow : Window
 
     private readonly DispatcherTimer _hide;
     private bool _lastMouseDown;
+    private long _shownAtTicks;
 
     public OverlayWindow()
     {
@@ -37,6 +38,7 @@ public partial class OverlayWindow : Window
         _hide = new DispatcherTimer { Interval = TimeSpan.FromSeconds(12) };
         _hide.Tick += (_, _) => Hide();
         IsVisibleChanged += OnVisibleChanged;
+        new WindowInteropHelper(this).EnsureHandle();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -80,9 +82,11 @@ public partial class OverlayWindow : Window
 
     private void Reveal()
     {
-        if (!IsVisible) Show();
         UpdateLayout();
         Anchor.PlaceAtCursor(this, ActualWidth, ActualHeight);
+        if (!IsVisible) Show();
+        _shownAtTicks = Environment.TickCount64;
+        _lastMouseDown = IsMouseDown();
         _hide.Stop();
         _hide.Start();
     }
@@ -91,10 +95,7 @@ public partial class OverlayWindow : Window
     {
         CompositionTarget.Rendering -= OnFrame;
         if ((bool)e.NewValue)
-        {
-            _lastMouseDown = IsMouseDown();
             CompositionTarget.Rendering += OnFrame;
-        }
     }
 
     private void OnFrame(object? sender, EventArgs e)
@@ -102,6 +103,12 @@ public partial class OverlayWindow : Window
         Anchor.PlaceAtCursor(this, ActualWidth, ActualHeight);
 
         bool down = IsMouseDown();
+        if (Environment.TickCount64 - _shownAtTicks < 180)
+        {
+            _lastMouseDown = down;
+            return;
+        }
+
         if (down && !_lastMouseDown)
         {
             _hide.Stop();
