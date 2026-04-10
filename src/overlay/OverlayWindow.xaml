@@ -15,7 +15,7 @@
             Padding="14,11"
             BorderThickness="1"
             MaxWidth="420"
-            MouseLeftButtonDown="OnClickDismiss">
+            IsHitTestVisible="False">
         <Border.Background>
             <SolidColorBrush Color="#0E0F13"
                              Opacity="0.92"/>

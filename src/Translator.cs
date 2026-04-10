@@ -66,10 +66,14 @@ public sealed class Translator : IDisposable
 
         try
         {
-            var text = await Selection.CaptureAsync();
-            if (string.IsNullOrWhiteSpace(text)) return;
-
             _overlay.ShowLoading();
+
+            var text = await Selection.CaptureAsync();
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                _overlay.Hide();
+                return;
+            }
 
             var system = Languages.BuildPrompt(_config.TargetLanguage);
             var result = await _ai.Translate(_config.ApiKey, _config.Model, system, text);

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Windows;
+using System.Windows.Input;
 using TranslatorCsV2.Ai;
 using TranslatorCsV2.Config;
 using TranslatorCsV2.Input;
@@ -65,4 +66,9 @@ public partial class SettingsWindow : Window
     }
 
     private void OnCancel(object sender, RoutedEventArgs e) => Close();
+
+    private void OnDragTitle(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left) DragMove();
+    }
 }
