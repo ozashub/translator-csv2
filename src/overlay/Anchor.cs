@@ -1,21 +1,24 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Interop;
 
 namespace TranslatorCsV2.Overlay;
 
 public static class Anchor
 {
-    public static void PlaceAtCursor(IntPtr hwnd, int offX = 18, int offY = 22)
+    public static void PlaceAtCursor(Window w, double dipW, double dipH, int offX = 18, int offY = 22)
     {
-        if (hwnd == IntPtr.Zero) return;
         if (!GetCursorPos(out var cursor)) return;
-        if (!GetWindowRect(hwnd, out var win)) return;
-
-        int pw = win.right - win.left;
-        int ph = win.bottom - win.top;
-        if (pw <= 0 || ph <= 0) return;
 
         var hMon = MonitorFromPoint(cursor, MONITOR_DEFAULTTONEAREST);
+        GetDpiForMonitor(hMon, 0, out uint dpiX, out uint dpiY);
+        double sx = dpiX / 96.0;
+        double sy = dpiY / 96.0;
+
+        int pw = (int)Math.Ceiling(dipW * sx);
+        int ph = (int)Math.Ceiling(dipH * sy);
+
         var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
         GetMonitorInfo(hMon, ref mi);
 
@@ -27,21 +30,22 @@ public static class Anchor
         if (x < mi.rcWork.left) x = mi.rcWork.left + 4;
         if (y < mi.rcWork.top)  y = mi.rcWork.top + 4;
 
-        SetWindowPos(hwnd, IntPtr.Zero, x, y, 0, 0,
-            SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_ASYNCWINDOWPOS);
+        var hwnd = new WindowInteropHelper(w).Handle;
+        if (hwnd == IntPtr.Zero) return;
+
+        SetWindowPos(hwnd, IntPtr.Zero, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
     private const int MONITOR_DEFAULTTONEAREST = 2;
-    private const uint SWP_NOSIZE        = 0x0001;
-    private const uint SWP_NOZORDER      = 0x0004;
-    private const uint SWP_NOACTIVATE    = 0x0010;
-    private const uint SWP_ASYNCWINDOWPOS = 0x4000;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOZORDER = 0x0004;
+    private const uint SWP_NOACTIVATE = 0x0010;
 
     [DllImport("user32.dll")] private static extern bool GetCursorPos(out POINT lpPoint);
-    [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
     [DllImport("user32.dll")] private static extern IntPtr MonitorFromPoint(POINT pt, int dwFlags);
     [DllImport("user32.dll")] private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
     [DllImport("user32.dll")] private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+    [DllImport("shcore.dll")] private static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT { public int x, y; }

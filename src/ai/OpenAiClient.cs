@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -12,61 +10,26 @@ namespace TranslatorCsV2.Ai;
 
 public sealed class OpenAiClient : IDisposable
 {
-    private const string Host = "https://api.openai.com";
-    private const string Endpoint = Host + "/v1/chat/completions";
+    private const string Endpoint = "https://api.openai.com/v1/chat/completions";
 
-    private readonly HttpClient _http;
+    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(30) };
 
     public string? LastError { get; private set; }
 
-    public OpenAiClient()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
-            EnableMultipleHttp2Connections = true,
-            ConnectTimeout = TimeSpan.FromSeconds(6),
-            AutomaticDecompression = DecompressionMethods.All,
-        };
-
-        _http = new HttpClient(handler)
-        {
-            Timeout = TimeSpan.FromSeconds(30),
-            DefaultRequestVersion = HttpVersion.Version20,
-            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
-        };
-        _http.DefaultRequestHeaders.ExpectContinue = false;
-        _http.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, br");
-    }
-
-    public async Task PreWarm()
-    {
-        try
-        {
-            using var req = new HttpRequestMessage(HttpMethod.Get, Host);
-            using var _ = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-        }
-        catch { }
-    }
-
-    public async Task<bool> StreamTranslate(
-        string apiKey, string model, string system, string user,
-        Action<string> onToken, CancellationToken ct = default)
+    public async Task<string?> Translate(string apiKey, string model, string system, string user, CancellationToken ct = default)
     {
         LastError = null;
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             LastError = "No API key set. Open settings.";
-            return false;
+            return null;
         }
 
         var payload = new
         {
             model,
             temperature = 0.2,
-            stream = true,
             messages = new object[]
             {
                 new { role = "system", content = system },
@@ -80,56 +43,35 @@ public sealed class OpenAiClient : IDisposable
 
         try
         {
-            using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+            using var resp = await _http.SendAsync(req, ct);
+            var body = await resp.Content.ReadAsStringAsync(ct);
 
             if (!resp.IsSuccessStatusCode)
             {
-                var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                 LastError = ExtractError(body) ?? $"HTTP {(int)resp.StatusCode}";
-                return false;
+                return null;
             }
 
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            using var reader = new StreamReader(stream);
-
-            while (true)
-            {
-                var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
-                if (line == null) break;
-                if (line.Length == 0 || !line.StartsWith("data: ", StringComparison.Ordinal)) continue;
-
-                var chunk = line.AsSpan(6);
-                if (chunk.SequenceEqual("[DONE]")) break;
-
-                var token = ExtractDelta(chunk);
-                if (!string.IsNullOrEmpty(token)) onToken(token);
-            }
-            return true;
+            return ExtractContent(body);
         }
         catch (TaskCanceledException)
         {
             LastError = "Timed out";
-            return false;
+            return null;
         }
         catch (HttpRequestException ex)
         {
             LastError = ex.Message;
-            return false;
+            return null;
         }
     }
 
-    private static string? ExtractDelta(ReadOnlySpan<char> json)
+    private static string? ExtractContent(string body)
     {
-        try
-        {
-            using var doc = JsonDocument.Parse(json.ToString());
-            var choices = doc.RootElement.GetProperty("choices");
-            if (choices.GetArrayLength() == 0) return null;
-            if (!choices[0].TryGetProperty("delta", out var delta)) return null;
-            if (!delta.TryGetProperty("content", out var content)) return null;
-            return content.GetString();
-        }
-        catch (JsonException) { return null; }
+        using var doc = JsonDocument.Parse(body);
+        var choices = doc.RootElement.GetProperty("choices");
+        if (choices.GetArrayLength() == 0) return null;
+        return choices[0].GetProperty("message").GetProperty("content").GetString()?.Trim();
     }
 
     private static string? ExtractError(string body)

@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace TranslatorCsV2.Overlay;
@@ -16,9 +16,7 @@ public partial class OverlayWindow : Window
     private const int VK_LBUTTON = 0x01;
 
     private readonly DispatcherTimer _hide;
-    private IntPtr _hwnd;
-    private CancellationTokenSource? _followCts;
-    private bool _timerResRaised;
+    private bool _lastMouseDown;
 
     public OverlayWindow()
     {
@@ -31,9 +29,9 @@ public partial class OverlayWindow : Window
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        _hwnd = new WindowInteropHelper(this).Handle;
-        int style = GetWindowLong(_hwnd, GWL_EXSTYLE);
-        SetWindowLong(_hwnd, GWL_EXSTYLE, style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT);
+        var hwnd = new WindowInteropHelper(this).Handle;
+        int style = GetWindowLong(hwnd, GWL_EXSTYLE);
+        SetWindowLong(hwnd, GWL_EXSTYLE, style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT);
     }
 
     public void ShowLoading()
@@ -50,20 +48,6 @@ public partial class OverlayWindow : Window
         Reveal();
     }
 
-    public void StartResult()
-    {
-        Caption.Text = "TRANSLATION";
-        Body.Text = "";
-        Reveal();
-    }
-
-    public void AppendResult(string token)
-    {
-        Body.Text += token;
-        _hide.Stop();
-        _hide.Start();
-    }
-
     public void ShowError(string err)
     {
         Caption.Text = "ERROR";
@@ -75,74 +59,38 @@ public partial class OverlayWindow : Window
     {
         if (!IsVisible) Show();
         UpdateLayout();
-        Anchor.PlaceAtCursor(_hwnd);
+        Anchor.PlaceAtCursor(this, ActualWidth, ActualHeight);
         _hide.Stop();
         _hide.Start();
     }
 
     private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if ((bool)e.NewValue) StartFollow();
-        else StopFollow();
-    }
-
-    private void StartFollow()
-    {
-        if (_followCts != null) return;
-        _followCts = new CancellationTokenSource();
-        var ct = _followCts.Token;
-
-        if (!_timerResRaised)
+        CompositionTarget.Rendering -= OnFrame;
+        if ((bool)e.NewValue)
         {
-            timeBeginPeriod(1);
-            _timerResRaised = true;
-        }
-
-        var hwnd = _hwnd;
-        bool lastDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-
-        new Thread(() =>
-        {
-            while (!ct.IsCancellationRequested)
-            {
-                Anchor.PlaceAtCursor(hwnd);
-
-                bool down = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-                if (down && !lastDown)
-                {
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        _hide.Stop();
-                        Hide();
-                    }));
-                    return;
-                }
-                lastDown = down;
-
-                Thread.Sleep(1);
-            }
-        })
-        { IsBackground = true, Name = "OverlayFollow" }.Start();
-    }
-
-    private void StopFollow()
-    {
-        var cts = _followCts;
-        if (cts == null) return;
-        _followCts = null;
-        cts.Cancel();
-
-        if (_timerResRaised)
-        {
-            timeEndPeriod(1);
-            _timerResRaised = false;
+            _lastMouseDown = IsMouseDown();
+            CompositionTarget.Rendering += OnFrame;
         }
     }
+
+    private void OnFrame(object? sender, EventArgs e)
+    {
+        Anchor.PlaceAtCursor(this, ActualWidth, ActualHeight);
+
+        bool down = IsMouseDown();
+        if (down && !_lastMouseDown)
+        {
+            _hide.Stop();
+            Hide();
+            return;
+        }
+        _lastMouseDown = down;
+    }
+
+    private static bool IsMouseDown() => (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
 
     [DllImport("user32.dll")] private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
     [DllImport("user32.dll")] private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
     [DllImport("user32.dll")] private static extern short GetAsyncKeyState(int vKey);
-
-    [DllImport("winmm.dll")] private static extern uint timeBeginPeriod(uint uPeriod);
-    [DllImport("winmm.dll")] private static extern uint timeEndPeriod(uint uPeriod);
 }
