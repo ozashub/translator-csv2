@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Windows;
 using System.Windows.Forms;
 
 namespace TranslatorCsV2.Tray;
@@ -30,12 +31,27 @@ public sealed class TrayIcon : IDisposable
 
         _icon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = LoadIcon(),
             Text = "Translator",
             Visible = true,
             ContextMenuStrip = menu,
         };
         _icon.DoubleClick += (_, _) => SettingsRequested?.Invoke();
+    }
+
+    private static Icon LoadIcon()
+    {
+        try
+        {
+            var info = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico"));
+            if (info != null)
+            {
+                using var s = info.Stream;
+                return new Icon(s);
+            }
+        }
+        catch { }
+        return SystemIcons.Application;
     }
 
     public void SetHotkeyLabel(string label)

@@ -10,6 +10,7 @@
     <RootNamespace>TranslatorCsV2</RootNamespace>
     <AssemblyName>Translator</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
     <LangVersion>latest</LangVersion>
@@ -22,6 +23,10 @@
 
   <ItemGroup>
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
 </Project>
