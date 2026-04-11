@@ -104,8 +104,13 @@ public static class Prompts
         "but do not add, remove, or change the meaning.\n" +
         "- Output only the translation. No commentary.";
 
-    public static string TranslateTo(string lang) =>
-        lang == "English" ? TranslateToEnglish : string.Format(TranslateTemplate, lang);
+    public static string TranslateTo(string lang)
+    {
+        var baseP = lang == "English" ? TranslateToEnglish : string.Format(TranslateTemplate, lang);
+        return baseP +
+            $"\n- If the text is already in {lang}, output it exactly as given with " +
+            "zero changes. Do not translate it into any other language.";
+    }
 
     public const string StructurePrompt =
         "You are a prompt engineer. The user will give you raw, unstructured notes \u2014 " +
@@ -131,12 +136,4 @@ public static class Prompts
         "- Keep the user's intent and personality. Don't sanitize their vision into " +
         "corporate speak.\n" +
         "- Output only the structured prompt. No meta-commentary about what you did.";
-
-    public const string RefusalFallback =
-        "If and only if you genuinely cannot comply with the request because it " +
-        "violates your own content policy, respond with the literal six characters " +
-        "[ERROR] and nothing else - no apology, no explanation, no punctuation. " +
-        "Do NOT use this for rude, offensive, profane, vulgar, or slur-containing " +
-        "content: translate it, rewrite it, or answer it exactly as asked. Use " +
-        "[ERROR] only when you actually refuse; otherwise produce the normal output.";
 }

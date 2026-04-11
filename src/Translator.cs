@@ -90,12 +90,6 @@ public sealed class Translator : IDisposable
                 return;
             }
 
-            if (IsRefusal(result))
-            {
-                _overlay.ShowBlocked();
-                return;
-            }
-
             _overlay.ShowResult(result);
         }
         catch (Exception ex)
@@ -142,12 +136,6 @@ public sealed class Translator : IDisposable
                     return;
                 }
 
-                if (IsRefusal(next))
-                {
-                    _overlay.ShowBlocked();
-                    return;
-                }
-
                 cur = next;
             }
 
@@ -174,21 +162,6 @@ public sealed class Translator : IDisposable
                                op.Lang == "English" ? 0.2 : 0.3),
         _                  => (Prompts.Improve, 0.5),
     };
-
-    private static bool IsRefusal(string text)
-    {
-        var t = text.Trim();
-        if (t == "[ERROR]") return true;
-        if (t.Length > 300) return false;
-
-        var lower = t.ToLowerInvariant();
-        return lower.StartsWith("i cannot")      || lower.StartsWith("i can't") ||
-               lower.StartsWith("i'm sorry")     || lower.StartsWith("i am sorry") ||
-               lower.StartsWith("sorry, i")      || lower.StartsWith("i'm unable") ||
-               lower.StartsWith("i am unable")   || lower.StartsWith("i must decline") ||
-               lower.StartsWith("as an ai")      || lower.StartsWith("i won't") ||
-               lower.StartsWith("i will not");
-    }
 
     public void Dispose()
     {

@@ -33,7 +33,6 @@ public sealed class OpenAiClient : IDisposable
             messages = new object[]
             {
                 new { role = "system", content = system },
-                new { role = "system", content = Prompts.RefusalFallback },
                 new { role = "user",   content = user   },
             },
         };
