@@ -18,13 +18,15 @@ public partial class OverlayWindow : Window
     private readonly DispatcherTimer _hide;
     private bool _lastMouseDown;
     private long _shownAtTicks;
+    private bool _hwndShown;
+    private bool _revealed;
 
     public OverlayWindow()
     {
         InitializeComponent();
         _hide = new DispatcherTimer { Interval = TimeSpan.FromSeconds(12) };
-        _hide.Tick += (_, _) => Hide();
-        IsVisibleChanged += OnVisibleChanged;
+        _hide.Tick += (_, _) => Conceal();
+        Opacity = 0;
         new WindowInteropHelper(this).EnsureHandle();
     }
 
@@ -57,22 +59,41 @@ public partial class OverlayWindow : Window
         Reveal();
     }
 
+    public new void Hide() => Conceal();
+
     private void Reveal()
     {
         UpdateLayout();
         Anchor.PlaceAtCursor(this, ActualWidth, ActualHeight);
-        if (!IsVisible) Show();
+
+        if (!_hwndShown)
+        {
+            _hwndShown = true;
+            base.Show();
+        }
+
+        if (!_revealed)
+        {
+            _revealed = true;
+            CompositionTarget.Rendering -= OnFrame;
+            CompositionTarget.Rendering += OnFrame;
+            Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
+            Opacity = 1;
+        }
+
         _shownAtTicks = Environment.TickCount64;
         _lastMouseDown = IsMouseDown();
         _hide.Stop();
         _hide.Start();
     }
 
-    private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    private void Conceal()
     {
+        if (!_revealed) return;
+        _revealed = false;
         CompositionTarget.Rendering -= OnFrame;
-        if ((bool)e.NewValue)
-            CompositionTarget.Rendering += OnFrame;
+        Opacity = 0;
+        _hide.Stop();
     }
 
     private void OnFrame(object? sender, EventArgs e)
@@ -88,8 +109,7 @@ public partial class OverlayWindow : Window
 
         if (down && !_lastMouseDown)
         {
-            _hide.Stop();
-            Hide();
+            Conceal();
             return;
         }
         _lastMouseDown = down;
