@@ -32,7 +32,7 @@ public sealed class TrayIcon : IDisposable
         _icon = new NotifyIcon
         {
             Icon = LoadIcon(),
-            Text = "Translator",
+            Text = "Translatory",
             Visible = true,
             ContextMenuStrip = menu,
         };
@@ -57,7 +57,6 @@ public sealed class TrayIcon : IDisposable
     public void SetHotkeyLabel(string label)
     {
         _hotkeyLabel.Text = $"Hotkey: {label}";
-        _icon.Text = $"Translator  —  {label}";
     }
 
     public void Dispose()

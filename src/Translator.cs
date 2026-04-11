@@ -108,43 +108,25 @@ public sealed class Translator : IDisposable
 
         try
         {
-            _overlay.ShowLoading();
-
-            var raw = await Selection.CaptureAsync(restoreClipboard: false);
-            if (string.IsNullOrWhiteSpace(raw))
-            {
-                _overlay.Hide();
-                return;
-            }
+            var raw = await Selection.CaptureAsync(restoreClipboard: false, selectAll: true);
+            if (string.IsNullOrWhiteSpace(raw)) return;
 
             var (stripped, ops) = OpParser.Parse(raw);
-            if (stripped == null || ops.Count == 0)
-            {
-                _overlay.Hide();
-                return;
-            }
+            if (stripped == null || ops.Count == 0) return;
 
             var cur = stripped;
             foreach (var op in ops)
             {
                 var (system, temp) = SystemFor(op);
                 var next = await _ai.Chat(_config.ApiKey, _config.Model, system, cur, temp);
-
-                if (next == null)
-                {
-                    _overlay.ShowError(_ai.LastError ?? "Unknown error");
-                    return;
-                }
-
+                if (next == null) return;
                 cur = next;
             }
 
-            await Selection.ReplaceAsync(cur);
-            _overlay.Hide();
+            await Selection.ReplaceAsync(cur, selectAll: true);
         }
-        catch (Exception ex)
+        catch
         {
-            _overlay.ShowError(ex.Message);
         }
         finally
         {

@@ -8,16 +8,23 @@ namespace TranslatorCsV2.Clipboard;
 public static class Selection
 {
     private const ushort VK_CONTROL = 0x11;
+    private const ushort VK_A = 0x41;
     private const ushort VK_C = 0x43;
     private const ushort VK_V = 0x56;
     private const uint KEYEVENTF_KEYUP = 0x0002;
 
-    public static async Task<string?> CaptureAsync(bool restoreClipboard = true)
+    public static async Task<string?> CaptureAsync(bool restoreClipboard = true, bool selectAll = false)
     {
         var saved = restoreClipboard ? TryReadClipboardText() : null;
         var seq = GetClipboardSequenceNumber();
 
-        SendCtrlC();
+        if (selectAll)
+        {
+            SendCombo(VK_A);
+            await Task.Delay(25);
+        }
+
+        SendCombo(VK_C);
 
         var text = await WaitForClipboardChange(seq, 400);
 
@@ -30,11 +37,18 @@ public static class Selection
         return text;
     }
 
-    public static async Task ReplaceAsync(string result)
+    public static async Task ReplaceAsync(string result, bool selectAll = false)
     {
         TryWriteClipboardText(result);
         await Task.Delay(15);
-        SendCtrlV();
+
+        if (selectAll)
+        {
+            SendCombo(VK_A);
+            await Task.Delay(25);
+        }
+
+        SendCombo(VK_V);
     }
 
     private static async Task<string?> WaitForClipboardChange(uint before, int timeoutMs)
@@ -48,9 +62,6 @@ public static class Selection
         }
         return null;
     }
-
-    private static void SendCtrlC() => SendCombo(VK_C);
-    private static void SendCtrlV() => SendCombo(VK_V);
 
     private static void SendCombo(ushort key)
     {
