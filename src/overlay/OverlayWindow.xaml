@@ -11,39 +11,40 @@
         Focusable="False"
         SizeToContent="WidthAndHeight"
         UseLayoutRounding="True">
-    <Border x:Name="Root"
-            CornerRadius="10"
-            Padding="14,11"
-            BorderThickness="1"
-            MaxWidth="420"
+    <Border MaxWidth="420"
             IsHitTestVisible="False">
-        <Border.Background>
-            <SolidColorBrush Color="#0E0F13"
-                             Opacity="0.92"/>
-        </Border.Background>
-        <Border.BorderBrush>
-            <SolidColorBrush Color="#FFFFFF"
-                             Opacity="0.10"/>
-        </Border.BorderBrush>
         <Border.Effect>
             <DropShadowEffect Color="Black"
                               BlurRadius="22"
                               ShadowDepth="0"
                               Opacity="0.55"/>
         </Border.Effect>
-        <StackPanel>
-            <TextBlock x:Name="Caption"
-                       Text="TRANSLATION"
-                       Foreground="#8A8F9C"
-                       FontSize="10"
-                       FontFamily="Segoe UI Semibold"
-                       Margin="0,0,0,4"/>
-            <TextBlock x:Name="Body"
-                       Foreground="#F2F3F5"
-                       FontSize="14"
-                       FontFamily="Segoe UI"
-                       TextWrapping="Wrap"
-                       LineHeight="20"/>
-        </StackPanel>
+        <Border x:Name="Root"
+                CornerRadius="10"
+                Padding="14,11"
+                BorderThickness="1">
+            <Border.Background>
+                <SolidColorBrush Color="#0E0F13"
+                                 Opacity="0.92"/>
+            </Border.Background>
+            <Border.BorderBrush>
+                <SolidColorBrush Color="#FFFFFF"
+                                 Opacity="0.10"/>
+            </Border.BorderBrush>
+            <StackPanel>
+                <TextBlock x:Name="Caption"
+                           Text="TRANSLATION"
+                           Foreground="#8A8F9C"
+                           FontSize="10"
+                           FontFamily="Segoe UI Semibold"
+                           Margin="0,0,0,4"/>
+                <TextBlock x:Name="Body"
+                           Foreground="#F2F3F5"
+                           FontSize="14"
+                           FontFamily="Segoe UI"
+                           TextWrapping="Wrap"
+                           LineHeight="20"/>
+            </StackPanel>
+        </Border>
     </Border>
 </Window>
