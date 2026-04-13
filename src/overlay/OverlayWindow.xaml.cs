@@ -66,6 +66,9 @@ public partial class OverlayWindow : Window
         UpdateLayout();
         Anchor.PlaceAtCursor(this, ActualWidth, ActualHeight);
 
+        _shownAtTicks = Environment.TickCount64;
+        _lastMouseDown = IsMouseDown();
+
         if (!_hwndShown)
         {
             _hwndShown = true;
@@ -81,8 +84,6 @@ public partial class OverlayWindow : Window
             Opacity = 1;
         }
 
-        _shownAtTicks = Environment.TickCount64;
-        _lastMouseDown = IsMouseDown();
         _hide.Stop();
         _hide.Start();
     }
